@@ -7,7 +7,7 @@ Nyagatare District, Rwanda.**
 
 
 > **GitHub repo:** https://github.com/alicemukarwema/climate_risk_planting_decision_model
-
+> **Demo video:** https://drive.google.com/file/d/1trDtNwObJ4aEENOfXE2WRl2Xh8jfeOKN/view?usp=sharing
 ---
 
 ## 1 · Description
@@ -17,7 +17,7 @@ temperature data, but a farmer's question is more concrete: *plant now or
 delay? Maize or beans? And how risky is it?* This Project answers that question
 with a deployed model that returns the **recommended crop, planting window,
 risk label (suitable/risky / delay), class probabilities, confidence,
-stochastic risk components, and a plain-language explanation**.
+stochastic risk components, and a plain-language explanation.
 
 **Pipeline**
 
