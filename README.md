@@ -1,13 +1,12 @@
-# Climate Risk-Aware Planting Recommendation Model — Nyagatare MVP
+# Climate Risk-Aware Planting Recommendation Model
 
 **Stochastic simulation (Markov chain + Monte Carlo) + machine learning for
 risk-aware maize & beans planting-window advice, Season A (Sep–Dec),
 Nyagatare District, Rwanda.**
 
-Capstone project — Alice Mukarwema, BSc Software Engineering.
-Supervisor: Emmanuel Adjei.
 
-> **GitHub repo:** https://github.com/alicemukarwema/climate_risk_planting_model
+
+> **GitHub repo:** https://github.com/alicemukarwema/climate_risk_planting_decision_model
 
 ---
 
@@ -15,9 +14,9 @@ Supervisor: Emmanuel Adjei.
 
 Existing climate services (Meteo Rwanda / ENACTS) publish rainfall and
 temperature data, but a farmer's question is more concrete: *plant now or
-delay? maize or beans? and how risky is it?* This MVP answers that question
+delay? Maize or beans? And how risky is it?* This Project answers that question
 with a deployed model that returns the **recommended crop, planting window,
-risk label (suitable / risky / delay), class probabilities, confidence,
+risk label (suitable/risky / delay), class probabilities, confidence,
 stochastic risk components, and a plain-language explanation**.
 
 **Pipeline**
@@ -33,7 +32,7 @@ stochastic risk layer ── 2-state Markov chain (month-specific transitions)
         │                + Monte Carlo: 1,000 simulated crop cycles per window
         ▼                → P(sufficient rain), P(dry spell), P(heat), risk score
 ML classification ── rule baseline vs Decision Trees vs XGBoost
-        │            labels: suitable / risky / delay (from observed outcomes)
+        │            labels: suitable/risky / delay (from observed outcomes)
         ▼
 FastAPI service ── Swagger UI + JSON API + optional web UI + prediction logging
 ```
@@ -49,11 +48,10 @@ FastAPI service ── Swagger UI + JSON API + optional web UI + prediction logg
 
 The stochastic risk features lift the interpretable Decision Tree (RQ3 ✅),
 and XGBoost wins every metric with by far the best-calibrated probabilities
-(RQ4 ✅) — calibration is the heart of *risk-aware* advice.
+(RQ4 ✅) — Calibration is the heart of *risk-aware* advice.
 
-### Note on Daily vs Dekadal Data
-
-The proposal targets daily data; the **publicly downloadable** ENACTS export
+### Dekadal Data
+ **publicly downloadable** ENACTS export
 from Meteo Rwanda's Maproom/Data portal is **dekadal** (10-day totals), so the
 whole pipeline operates at dekad resolution. Every daily concept is mapped
 explicitly: wet *day* (≥1 mm) → wet *dekad* (≥20 mm ≈ 2 mm/day at district
@@ -64,7 +62,7 @@ the thresholds in `src/crops.py` change.
 
 ### Data Source
 
-The climate records used in this MVP are exported from Rwanda Meteorology
+The climate records used in this project are exported from the Rwanda Meteorology
 Agency / Meteo Rwanda ENACTS services for the Nyagatare area. Because the
 interactive Maproom/Data portals can redirect, timeout, or require manual
 navigation, the exact extracts used for this project are committed locally:
@@ -86,7 +84,7 @@ records for the Nyagatare box.
 Requires **Python 3.11+**.
 
 ```bash
-git clone https://github.com/alicemukarwema/climate_risk_planting_model
+git clone https://github.com/alicemukarwema/climate_risk_planting_decision_model
 cd climate_risk_planting_model
 
 python -m venv .venv
@@ -96,10 +94,10 @@ pip install -r requirements.txt      # API + model runtime dependencies
 # 1. train: features → simulation → labels → 4-model comparison → artefacts
 python train.py
 
-# 2. test the deployed API behaviour
+# 2. Test the deployed API behaviour
 python tests/test_api.py
 
-# 3. serve the API locally
+# 3. Serve the API locally
 uvicorn app:app --reload --port 8000
 ```
 
@@ -113,8 +111,7 @@ Then open:
 | http://localhost:8000/metrics | Full model-comparison report (JSON) |
 
 The ML notebook (data visualization, architecture, metrics) is at
-[`notebooks/nyagatare_model.ipynb`](notebooks/nyagatare_model.ipynb) — already
-executed with all outputs embedded. To re-run:
+[`notebooks/nyagatare_model.ipynb`](notebooks/nyagatare_model.ipynb) 
 
 ```bash
 pip install -r requirements-dev.txt
@@ -143,8 +140,8 @@ is kept only as a simple local helper; the API is the main demo surface.
 ![Swagger UI](docs/screenshots/05_swagger_ui.png)
 
 Key notebook figures live in [`docs/figures/`](docs/figures/) — annual rainfall
-cycle, Markov transition probabilities, Monte Carlo validation against the
-observed cycle-rainfall distribution, risk-by-window profiles, confusion
+cycle, Markov transition probabilities, and Monte Carlo validation against the
+observed cycle-rainfall distribution, risk-by-window profiles, and confusion
 matrices, and feature importance.
 
 ---
@@ -172,19 +169,6 @@ matrices, and feature importance.
 ├── models/                 xgb_planting_risk.json + report.json
 ├── static/index.html       optional web UI
 └── docs/                   screenshots, figures, TESTING.md, feedback_form.md
-```
-
-The exported data tables mirror the proposal's Table 4 / capstone checklist:
-`dekadal_climate_data.csv` (cleaned + merged, with `is_wet_dekad`, `season`,
-location), `crop_requirements.csv` (with source notes),
-`planting_windows.csv`, `engineered_features.csv`, `simulation_outputs.csv`
-(100 Monte Carlo runs for every crop × window with sufficiency / dry-spell /
-heat outcomes), and `ml_training_dataset.csv`. `prediction_logs.csv` is
-generated when the API is queried and is intentionally not committed.
-A reviewer questionnaire for the proposal's limited expert feedback (5–10
-reviewers) is at [`docs/feedback_form.md`](docs/feedback_form.md).
-
----
 
 ## 5 · Deployment plan
 
@@ -225,7 +209,7 @@ redeploy.
 - The *delay* class is rare (40/713 rows), so its precision/recall estimates
   are less stable; more years or sector-level data would help.
 - Crop thresholds come from FAO guidance calibrated to this dataset —
-  **validate with RAB Nyagatare before any farmer-facing pilot**.
+  ** Validate with RAB Nyagatare before any farmer-facing pilot**.
 - Tmin ends 2016 and Tmax 2021; later seasons fall back to climatology for
   the temperature component.
 - Outputs are decision support, not guaranteed outcomes (ethics, proposal §3.12).
