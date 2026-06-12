@@ -1,0 +1,3 @@
+crop,cycle_dekads,min_cycle_mm,ideal_cycle_mm,min_establishment_mm,tmax_stress_anom_c,source_note
+maize,12,330.0,450.0,60.0,1.2,FAO crop water needs (maize 350-500 mm short-cycle); establishment ~50-70 mm/30d; thresholds calibrated to the ENACTS district-average product (see notebook s.1); heat stress = warm anomaly proxy vs Sep-Dec climatology (maize optimum ~25 C) - validate with RAB Nyagatare
+beans,7,200.0,300.0,50.0,0.8,FAO crop water needs (bush bean 200-300 mm / 60-75 d); establishment ~40-60 mm/30d; beans more heat-sensitive (stress above ~25 C mean) so tighter anomaly threshold; calibrated to ENACTS district average - validate with RAB Nyagatare

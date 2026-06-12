@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nyagatare Planting Advisor</title>
+<style>
+  :root{
+    --green:#1b7a43; --green-dark:#11592f; --amber:#b87b00; --red:#b3372b;
+    --bg:#f4f7f4; --card:#ffffff; --ink:#21302a; --muted:#5f7268;
+    --line:#dde6df; --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg);
+       color:var(--ink); min-height:100vh}
+  header{background:linear-gradient(135deg,var(--green-dark),var(--green));
+         color:#fff; padding:26px 20px 20px}
+  header h1{font-size:1.45rem; font-weight:650}
+  header p{opacity:.85; font-size:.92rem; margin-top:4px}
+  nav{display:flex; gap:6px; max-width:980px; margin:14px auto 0}
+  nav button{flex:1; padding:11px 8px; border:0; border-radius:10px 10px 0 0;
+             background:rgba(255,255,255,.16); color:#fff; font-size:.95rem;
+             cursor:pointer; transition:background .15s}
+  nav button:hover{background:rgba(255,255,255,.28)}
+  nav button.active{background:var(--bg); color:var(--green-dark); font-weight:650}
+  main{max-width:980px; margin:0 auto; padding:22px 16px 60px}
+  .card{background:var(--card); border:1px solid var(--line);
+        border-radius:var(--radius); padding:22px; margin-bottom:18px;
+        box-shadow:0 1px 4px rgba(20,40,30,.05)}
+  h2{font-size:1.08rem; margin-bottom:14px; color:var(--green-dark)}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+        gap:14px}
+  label{display:block; font-size:.82rem; color:var(--muted); margin-bottom:5px;
+        font-weight:600}
+  select,input{width:100%; padding:10px 12px; border:1px solid var(--line);
+        border-radius:9px; font-size:.95rem; background:#fff; color:var(--ink)}
+  select:focus,input:focus{outline:2px solid var(--green); border-color:var(--green)}
+  .hint{font-size:.75rem; color:var(--muted); margin-top:4px}
+  .actions{margin-top:18px; display:flex; gap:10px; align-items:center}
+  .btn{background:var(--green); color:#fff; border:0; padding:12px 26px;
+       border-radius:9px; font-size:1rem; font-weight:600; cursor:pointer}
+  .btn:hover{background:var(--green-dark)}
+  .btn.ghost{background:#fff; color:var(--green-dark); border:1px solid var(--green)}
+  .badge{display:inline-block; padding:4px 12px; border-radius:999px;
+         font-size:.8rem; font-weight:700; color:#fff; text-transform:uppercase;
+         letter-spacing:.04em}
+  .badge.suitable{background:var(--green)} .badge.risky{background:var(--amber)}
+  .badge.delay{background:var(--red)}
+  .rec-head{display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+            margin-bottom:12px}
+  .rec-head .crop{font-size:1.3rem; font-weight:700; text-transform:capitalize}
+  .stat-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+            gap:10px; margin:14px 0}
+  .stat{background:var(--bg); border-radius:10px; padding:12px}
+  .stat b{display:block; font-size:1.15rem}
+  .stat span{font-size:.74rem; color:var(--muted)}
+  .bar-wrap{margin:6px 0}
+  .bar-label{display:flex; justify-content:space-between; font-size:.8rem;
+             color:var(--muted)}
+  .bar{height:9px; background:var(--line); border-radius:6px; overflow:hidden;
+       margin-top:3px}
+  .bar i{display:block; height:100%; border-radius:6px}
+  .explain{background:#eef5ef; border-left:4px solid var(--green);
+           padding:12px 14px; border-radius:0 9px 9px 0; font-size:.93rem;
+           margin-top:12px; line-height:1.5}
+  table{width:100%; border-collapse:collapse; font-size:.88rem}
+  th,td{padding:9px 10px; text-align:left; border-bottom:1px solid var(--line)}
+  th{color:var(--muted); font-size:.76rem; text-transform:uppercase;
+     letter-spacing:.05em; cursor:default}
+  tr.best{background:#eef7ef}
+  .muted{color:var(--muted); font-size:.85rem}
+  .spinner{display:none; width:22px; height:22px; border:3px solid var(--line);
+           border-top-color:var(--green); border-radius:50%;
+           animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  footer{max-width:980px; margin:0 auto; padding:0 16px 30px;
+         font-size:.78rem; color:var(--muted); line-height:1.5}
+  .hidden{display:none}
+  #metricsTable td:first-child{font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <div style="max-width:980px;margin:0 auto">
+    <h1> Nyagatare Climate Risk-Aware Planting Advisor</h1>
+    <p>Maize &amp; beans · Season A (Sep–Dec) · Markov-chain Monte Carlo simulation + XGBoost</p>
+    <nav>
+      <button class="active" data-tab="advice">Get advice</button>
+      <button data-tab="scan">Season scan</button>
+      <button data-tab="metrics">Model metrics</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ============ TAB 1: ADVICE ============ -->
+  <section id="tab-advice">
+    <div class="card">
+      <h2>1 · Describe your situation</h2>
+      <div class="grid">
+        <div>
+          <label for="crop">Crop</label>
+          <select id="crop">
+            <option value="auto" selected>Compare both (recommended)</option>
+            <option value="maize">Maize</option>
+            <option value="beans">Beans</option>
+          </select>
+        </div>
+        <div>
+          <label for="window">Planting window</label>
+          <select id="window"><option value="">Scan all windows</option></select>
+        </div>
+        <div>
+          <label for="last3">Rain in the last 30 days (mm)</label>
+          <input id="last3" type="number" min="0" max="500" placeholder="leave blank = normal">
+          <!--<div class="hint">From your rain gauge or Meteo Rwanda</div> -->
+
+          <label for="tanom">How warm has this year felt?</label>
+          <select id="tanom">
+            <option value="">Normal year</option>
+            <option value="0.8">Warmer than usual</option>
+            <option value="1.5">Much warmer (e.g. El Niño)</option>
+            <option value="-0.5">Cooler than usual</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="go">Get recommendation</button>
+        <div class="spinner" id="spin1"></div>
+      </div>
+    </div>
+    <div id="result" class="hidden">
+      <div class="card" id="recCard"></div>
+      <div class="card">
+        <h2>Alternatives considered</h2>
+        <div id="altList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 2: SEASON SCAN ============ -->
+  <section id="tab-scan" class="hidden">
+    <div class="card">
+      <h2>All crop × window options (climatological conditions)</h2>
+      <p class="muted" style="margin-bottom:12px">
+        Every candidate Season A planting window for both crops, ranked by the
+        model. Green row = best risk-aware choice.</p>
+      <div class="actions" style="margin:0 0 14px">
+        <button class="btn ghost" id="scanBtn">Run season scan</button>
+        <div class="spinner" id="spin2"></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table id="scanTable" class="hidden">
+          <thead><tr>
+            <th>Crop</th><th>Window</th><th>Risk label</th>
+            <th>P(sufficient rain)</th><th>P(dry spell)</th>
+            <th>Risk score</th><th>Confidence</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 3: METRICS ============ -->
+  <section id="tab-metrics" class="hidden">
+    <div class="card">
+      <h2>Model comparison — temporal hold-out (train ≤2014, test 2015+)</h2>
+      <p class="muted" style="margin-bottom:12px">
+        Four model versions from the proposal: fixed agronomic rules,
+        Decision Tree on raw climate features, Decision Tree on stochastic
+        risk features, and XGBoost on all features.</p>
+      <table id="metricsTable">
+        <thead><tr><th>Model</th><th>Macro F1 ↑</th><th>Balanced acc. ↑</th>
+        <th>Brier score ↓</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div id="fi" style="margin-top:20px"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+   Decision support only — not a guaranteed farming outcome. 
+</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const tabs = document.querySelectorAll("nav button");
+tabs.forEach(b => b.onclick = () => {
+  tabs.forEach(x => x.classList.toggle("active", x === b));
+  ["advice","scan","metrics"].forEach(t =>
+    $("#tab-" + t).classList.toggle("hidden", b.dataset.tab !== t));
+  if (b.dataset.tab === "metrics") loadMetrics();
+});
+
+const riskColor = s => s <= .3 ? "var(--green)" : s <= .6 ? "var(--amber)" : "var(--red)";
+const pct = v => Math.round(v * 100) + "%";
+
+fetch("/windows").then(r => r.json()).then(w => {
+  for (const [k, v] of Object.entries(w))
+    $("#window").insertAdjacentHTML("beforeend",
+      `<option value="${k}">${v}</option>`);
+});
+
+function bar(label, value, color) {
+  return `<div class="bar-wrap"><div class="bar-label"><span>${label}</span>
+    <span>${pct(value)}</span></div>
+    <div class="bar"><i style="width:${value*100}%;background:${color}"></i></div></div>`;
+}
+
+function optionCard(o, heading) {
+  return `
+    <div class="rec-head">
+      <span class="crop">${heading || o.crop}</span>
+      <span class="badge ${o.risk_label}">${o.risk_label}</span>
+      <span class="muted">plant ${o.planting_window}</span>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><b>${pct(o.p_rain_sufficient)}</b><span>chance of sufficient rain</span></div>
+      <div class="stat"><b>${pct(o.p_dry_spell)}</b><span>early dry-spell risk</span></div>
+      <div class="stat"><b>${pct(o.p_temp_stress)}</b><span>heat-stress risk</span></div>
+      <div class="stat"><b style="color:${riskColor(o.risk_score)}">${o.risk_score.toFixed(2)}</b>
+        <span>risk score (${o.risk_level})</span></div>
+      <div class="stat"><b>${o.simulated_cycle_rain_mm.median.toFixed(0)} mm</b>
+        <span>median simulated cycle rain (p10 ${o.simulated_cycle_rain_mm.p10.toFixed(0)} – p90 ${o.simulated_cycle_rain_mm.p90.toFixed(0)})</span></div>
+    </div>
+    ${bar("P(suitable)", o.class_probabilities.suitable, "var(--green)")}
+    ${bar("P(risky)", o.class_probabilities.risky, "var(--amber)")}
+    ${bar("P(delay)", o.class_probabilities.delay, "var(--red)")}
+    <div class="explain">${o.explanation}</div>`;
+}
+
+$("#go").onclick = async () => {
+  $("#spin1").style.display = "block";
+  const body = { crop: $("#crop").value };
+  if ($("#window").value) body.window_start_dekad = +$("#window").value;
+  if ($("#last3").value) body.last3_rain = +$("#last3").value;
+  if ($("#tanom").value) body.pre_tmax_anom = +$("#tanom").value;
+  try {
+    const r = await fetch("/predict", {method:"POST",
+      headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
+    const d = await r.json();
+    $("#recCard").innerHTML =
+      "<h2> Recommended option</h2>" + optionCard(d.recommendation);
+    $("#altList").innerHTML = d.alternatives.map(a => `
+      <div style="display:flex;gap:10px;align-items:center;padding:9px 0;
+                  border-bottom:1px solid var(--line)">
+        <span class="badge ${a.risk_label}">${a.risk_label}</span>
+        <b style="text-transform:capitalize">${a.crop}</b>
+        <span class="muted">${a.planting_window}</span>
+        <span class="muted" style="margin-left:auto">risk ${a.risk_score.toFixed(2)}
+          · conf ${pct(a.confidence)}</span>
+      </div>`).join("") || "<p class='muted'>No alternatives.</p>";
+    $("#result").classList.remove("hidden");
+    $("#result").scrollIntoView({behavior:"smooth"});
+  } finally { $("#spin1").style.display = "none"; }
+};
+
+$("#scanBtn").onclick = async () => {
+  $("#spin2").style.display = "block";
+  try {
+    const d = await (await fetch("/recommend/season")).json();
+    const best = d.recommendation;
+    const tb = $("#scanTable tbody");
+    tb.innerHTML = d.all_options.map(o => `
+      <tr class="${o.crop === best.crop && o.window_start_dekad === best.window_start_dekad ? "best" : ""}">
+        <td style="text-transform:capitalize">${o.crop}</td>
+        <td>${o.planting_window}</td>
+        <td><span class="badge ${o.risk_label}">${o.risk_label}</span></td>
+        <td>${pct(o.p_rain_sufficient)}</td>
+        <td>${pct(o.p_dry_spell)}</td>
+        <td style="color:${riskColor(o.risk_score)};font-weight:600">${o.risk_score.toFixed(2)}</td>
+        <td>${pct(o.confidence)}</td>
+      </tr>`).join("");
+    $("#scanTable").classList.remove("hidden");
+  } finally { $("#spin2").style.display = "none"; }
+};
+
+async function loadMetrics() {
+  const d = await (await fetch("/metrics")).json();
+  const names = {rule_baseline:"Rule-based baseline",
+    dt_raw:"Decision Tree — raw climate", dt_risk:"Decision Tree — risk features",
+    xgb_full:"XGBoost — all features (selected)"};
+  $("#metricsTable tbody").innerHTML = Object.entries(names).map(([k,n]) => `
+    <tr ${k==="xgb_full"?'class="best"':""}><td>${n}</td>
+      <td>${d[k].macro_f1.toFixed(3)}</td>
+      <td>${d[k].balanced_accuracy.toFixed(3)}</td>
+      <td>${d[k].brier_score.toFixed(3)}</td></tr>`).join("");
+  const fi = d.xgb_full.feature_importance;
+  const max = Math.max(...Object.values(fi));
+  $("#fi").innerHTML = "<h2>XGBoost feature importance</h2>" +
+    Object.entries(fi).slice(0, 10).map(([f,v]) =>
+      bar(f, v / max, "var(--green)")).join("");
+}
+</script>
+</body>
+</html>
