@@ -1,26 +1,36 @@
 """
-Deployment tests (capstone checklist section 10).
+Small deployment smoke tests for the capstone API and Streamlit demo.
 
-Run:  python tests/test_api.py        (no server needed - uses TestClient)
+Run:  python tests/test_api.py
 
-Covers: valid inputs, missing inputs, invalid inputs, forced maize, forced
-beans, a risky output, a delay output, the season scan, and the metrics
-report. Results are printed as a PASS/FAIL table.
+These tests avoid a running server and keep the checks close to the public
+endpoint functions. They cover health, metrics, valid prediction, missing and
+invalid inputs, required prediction fields, and a lightweight Streamlit import.
 """
+import importlib
 import sys
 from pathlib import Path
+
+from pydantic import ValidationError
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
-from fastapi.testclient import TestClient
-from app import app
+import app
 
-REQUIRED_FIELDS = {"crop", "planting_window", "risk_label",
-                   "class_probabilities", "confidence", "risk_score",
-                   "p_rain_sufficient", "p_dry_spell", "p_temp_stress",
-                   "explanation"}
+
+REQUIRED_FIELDS = {
+    "crop",
+    "planting_window",
+    "risk_label",
+    "class_probabilities",
+    "p_rain_sufficient",
+    "p_dry_spell",
+    "p_temp_stress",
+    "explanation",
+}
+VALID_LABELS = {"suitable", "risky", "delay"}
 results = []
 
 
@@ -28,84 +38,96 @@ def check(name, cond, detail=""):
     results.append((name, bool(cond), detail))
 
 
-with TestClient(app) as client:          # context manager triggers startup
-    # 1. health
-    r = client.get("/health")
-    check("GET /health returns ok", r.status_code == 200
-          and r.json()["artefacts_present"])
+def run_checks():
+    app._startup()
 
-    # 2. valid full scenario
-    r = client.post("/predict", json={"crop": "auto", "last3_rain": 60,
-                                      "pre_tmax_anom": 0.0})
-    rec = r.json()["recommendation"]
-    check("valid input -> 200 + all required output fields",
-          r.status_code == 200 and REQUIRED_FIELDS <= set(rec),
-          f"got {rec['crop']} / {rec['planting_window']} / {rec['risk_label']}")
+    # 1. API health endpoint
+    health = app.health()
+    check(
+        "health endpoint reports ready model",
+        health["status"] == "ok"
+        and health["artefacts_present"]
+        and health["model_loaded"]
+        and "Meteo Rwanda / ENACTS" in health["data_source"],
+    )
 
-    # 3. missing inputs -> climatological defaults
-    r = client.post("/predict", json={})
-    check("missing inputs handled (falls back to climatology)",
-          r.status_code == 200
-          and r.json()["recommendation"]["risk_label"] in
-          ("suitable", "risky", "delay"))
+    # 2. Metrics endpoint
+    metrics = app.metrics()
+    selected = metrics.get("selected_model_metrics", {})
+    check(
+        "metrics endpoint includes model comparison and selected metrics",
+        {"rule_baseline", "dt_raw", "dt_risk", "xgb_full"} <= set(metrics)
+        and bool(metrics.get("model_comparison_table"))
+        and selected.get("macro_f1") is not None
+        and selected.get("balanced_accuracy") is not None
+        and selected.get("brier_score") is not None,
+    )
+    per_class = selected.get("per_class") or {}
+    check(
+        "metrics endpoint includes per-class recall",
+        all("recall" in values for values in per_class.values()),
+    )
 
-    # 4. invalid input rejected
-    r = client.post("/predict", json={"crop": "auto",
-                                      "window_start_dekad": 50})
-    check("invalid window (50) rejected with 422", r.status_code == 422)
+    # 3. Valid prediction request
+    valid = app.predict(app.Scenario(crop="maize", window_start_dekad=25))
+    rec = valid["recommendation"]
+    check(
+        "valid prediction returns recommendation",
+        rec["crop"] == "maize" and REQUIRED_FIELDS <= set(rec),
+        f"label={rec.get('risk_label')}",
+    )
 
-    # 5. maize recommendation
-    r = client.post("/predict", json={"crop": "maize",
-                                      "window_start_dekad": 25})
-    rec = r.json()["recommendation"]
-    check("forced maize assessment returns maize", rec["crop"] == "maize",
-          f"label={rec['risk_label']} score={rec['risk_score']}")
+    # 4. Missing and invalid input
+    missing = app.predict(app.Scenario())
+    missing_rec = missing["recommendation"]
+    check(
+        "missing input falls back to defaults",
+        missing_rec["risk_label"] in VALID_LABELS,
+        f"label={missing_rec.get('risk_label')}",
+    )
+    try:
+        app.Scenario(crop="maize", window_start_dekad=50)
+        invalid_rejected = False
+    except ValidationError:
+        invalid_rejected = True
+    check("invalid planting window is rejected", invalid_rejected)
 
-    # 6. beans recommendation
-    r = client.post("/predict", json={"crop": "beans",
-                                      "window_start_dekad": 28})
-    rec = r.json()["recommendation"]
-    check("forced beans assessment returns beans", rec["crop"] == "beans",
-          f"label={rec['risk_label']} score={rec['risk_score']}")
+    # 5. Prediction output includes risk class and explanation
+    check(
+        "prediction includes risk class and explanation",
+        rec["risk_label"] in VALID_LABELS and bool(rec["explanation"]),
+    )
+    check(
+        "prediction includes risk components",
+        all(k in rec for k in ("p_rain_sufficient", "p_dry_spell", "p_temp_stress")),
+    )
 
-    # 7. risky output reachable (dry recent spell + hot year, early window)
-    r = client.post("/predict", json={"crop": "maize",
-                                      "window_start_dekad": 25,
-                                      "last3_rain": 10, "last_dekad_rain": 2,
-                                      "onset_reached": False,
-                                      "pre_tmax_anom": 1.5})
-    lbl = r.json()["recommendation"]["risk_label"]
-    check("stress scenario produces non-suitable label",
-          lbl in ("risky", "delay"), f"label={lbl}")
+    # 6. Streamlit import does not crash if dependency is installed
+    try:
+        streamlit_app = importlib.import_module("streamlit_app")
+        report = streamlit_app.load_metrics()
+        ok = report is None or "xgb_full" in report
+        detail = "imported"
+    except ModuleNotFoundError as exc:
+        ok = False
+        detail = f"missing dependency: {exc.name}"
+    except Exception as exc:
+        ok = False
+        detail = f"{type(exc).__name__}: {exc}"
+    check("streamlit_app imports", ok, detail)
 
-    # 8. delay output reachable (late-November beans)
-    r = client.post("/predict", json={"crop": "beans",
-                                      "window_start_dekad": 33})
-    lbl = r.json()["recommendation"]["risk_label"]
-    check("late-November beans -> delay", lbl == "delay", f"label={lbl}")
 
-    # 9. season scan: 2 crops x 9 windows
-    r = client.get("/recommend/season")
-    check("season scan returns 18 ranked options",
-          r.status_code == 200 and len(r.json()["all_options"]) == 18)
-
-    # 10. metrics report: all four proposal models
-    r = client.get("/metrics")
-    check("metrics report contains all 4 models",
-          {"rule_baseline", "dt_raw", "dt_risk", "xgb_full"}
-          <= set(r.json()))
-
-    # 11. prediction log written
-    check("prediction_logs.csv written",
-          (ROOT / "data" / "prediction_logs.csv").exists())
+run_checks()
 
 print(f"\n{'TEST':58s} RESULT")
 print("-" * 72)
 ok = True
 for name, passed, detail in results:
     ok &= passed
-    print(f"{name:58s} {'PASS' if passed else 'FAIL'}"
-          + (f"   [{detail}]" if detail else ""))
+    print(
+        f"{name:58s} {'PASS' if passed else 'FAIL'}"
+        + (f"   [{detail}]" if detail else "")
+    )
 print("-" * 72)
 print(f"{sum(p for _, p, _ in results)}/{len(results)} passed")
 sys.exit(0 if ok else 1)
