@@ -126,15 +126,6 @@ def main() -> None:
 
     show_metrics(load_metrics())
 
-    st.subheader("Limitations")
-    st.markdown(
-        "- The model uses Meteo Rwanda/ENACTS dekadal climate extracts.\n"
-        "- The data are spatial averages, not farm-level measurements.\n"
-        "- The labels are proxy agronomic labels, not measured yield labels.\n"
-        "- The output is decision support only, not guaranteed farming advice.\n"
-        "- Mobile app, SMS/USSD, dashboard, and automatic retraining are future work."
-    )
-
 
 if __name__ == "__main__":
     main()
