@@ -1,4 +1,4 @@
-# Runtime dependencies for the FastAPI deployment and training pipeline.
+# Runtime dependencies for the FastAPI deployment, Streamlit demo, and training pipeline.
 # Versions are pinned for reproducible installs and to match the saved XGBoost
 # model artefact in models/xgb_planting_risk.json.
 pandas==3.0.3
@@ -6,8 +6,9 @@ numpy==2.4.6
 scikit-learn==1.9.0
 xgboost==3.2.0
 
-fastapi==0.115.6
-starlette==0.41.3
+fastapi==0.138.1
+starlette==1.3.1
 pydantic==2.10.4
 uvicorn==0.34.0
-httpx==0.27.2
+httpx2==2.5.0
+streamlit==1.58.0
