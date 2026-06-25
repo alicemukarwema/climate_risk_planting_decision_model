@@ -14,6 +14,7 @@ Endpoints
 """
 import sys, json
 from pathlib import Path
+from typing import Literal, Optional
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
@@ -22,11 +23,18 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
-from typing import Literal, Optional
 
 from crops import PLANTING_WINDOWS, DEKAD_LABEL
 from model import MODELS
 from service import AdvisoryService
+
+DATA_SOURCE = "Meteo Rwanda / ENACTS Maproom dekadal extracts"
+DECISION_SUPPORT_WARNING = "Decision support only, not guaranteed farming advice."
+SELECTED_MODEL_KEY = "xgb_full"
+SELECTED_MODEL_NAME = "Climate Risk-Aware Planting Window Classifier"
+MISSING_ARTEFACTS_MESSAGE = (
+    "Model artifacts missing. Run `python train.py` first."
+)
 
 app = FastAPI(
     title="Nyagatare Climate Risk-Aware Planting Advisor",
@@ -48,9 +56,42 @@ def _startup():
 
 def _svc() -> AdvisoryService:
     if service is None:
-        raise HTTPException(503, "Model artefacts missing - run "
-                                 "`python train.py` first.")
+        raise HTTPException(503, MISSING_ARTEFACTS_MESSAGE)
     return service
+
+
+def _report_path() -> Path:
+    return MODELS / "report.json"
+
+
+def _selected_model(report: dict | None = None) -> str | None:
+    model_file = MODELS / "xgb_planting_risk.json"
+    if report is not None and SELECTED_MODEL_KEY in report:
+        return SELECTED_MODEL_NAME
+    if model_file.exists():
+        return SELECTED_MODEL_NAME
+    return None
+
+
+def _load_report() -> dict:
+    report = _report_path()
+    if not report.exists():
+        raise HTTPException(503, MISSING_ARTEFACTS_MESSAGE)
+    return json.loads(report.read_text())
+
+
+def _model_comparison_table(report: dict) -> list[dict]:
+    rows = []
+    for model_name, values in report.items():
+        if model_name.startswith("_") or not isinstance(values, dict):
+            continue
+        rows.append({
+            "model": model_name,
+            "macro_f1": values.get("macro_f1"),
+            "balanced_accuracy": values.get("balanced_accuracy"),
+            "brier_score": values.get("brier_score"),
+        })
+    return rows
 
 
 class Scenario(BaseModel):
@@ -78,8 +119,20 @@ class Scenario(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok",
-            "artefacts_present": AdvisoryService.artefacts_present()}
+    artefacts_present = AdvisoryService.artefacts_present()
+    model_loaded = service is not None
+    report = None
+    if _report_path().exists():
+        report = json.loads(_report_path().read_text())
+    return {
+        "status": "ok",
+        "model_loaded": model_loaded,
+        "selected_model": _selected_model(report),
+        "data_source": DATA_SOURCE,
+        "warning": DECISION_SUPPORT_WARNING,
+        # Kept for the existing deployment test and backwards compatibility.
+        "artefacts_present": artefacts_present,
+    }
 
 
 @app.get("/recommend/season")
@@ -118,10 +171,27 @@ def metrics():
     """Model comparison report: rule baseline vs Decision Trees vs XGBoost
     (macro F1, balanced accuracy, Brier score, per-class precision/recall,
     confusion matrices, feature importance)."""
-    report = MODELS / "report.json"
-    if not report.exists():
-        raise HTTPException(503, "Run `python train.py` first.")
-    return json.loads(report.read_text())
+    report = _load_report()
+    response = dict(report)
+    selected = report.get(SELECTED_MODEL_KEY, {})
+    response.update({
+        "selected_model": _selected_model(report),
+        "model_comparison_table": _model_comparison_table(report),
+        "selected_model_metrics": {
+            "macro_f1": selected.get("macro_f1"),
+            "balanced_accuracy": selected.get("balanced_accuracy"),
+            "brier_score": selected.get("brier_score"),
+            "per_class": selected.get("per_class"),
+            "confusion_matrix": selected.get("confusion_matrix"),
+            "confusion_matrix_labels": selected.get("confusion_matrix_labels"),
+        },
+        "note": (
+            "Delay/high-risk recall matters because false reassurance is the "
+            "most serious error: predicting suitable when conditions are "
+            "actually delay or high risk."
+        ),
+    })
+    return response
 
 
 @app.get("/windows")
