@@ -4,10 +4,9 @@
 risk-aware maize & beans planting-window advice, Season A (Sep–Dec),
 Nyagatare District, Rwanda.**
 
-
-
 > **GitHub repo:** https://github.com/alicemukarwema/climate_risk_planting_decision_model
 > **Demo video:** https://drive.google.com/file/d/1trDtNwObJ4aEENOfXE2WRl2Xh8jfeOKN/view?usp=sharing
+
 ---
 
 ## 1 · Description
@@ -83,21 +82,36 @@ records for the Nyagatare box.
 
 Requires **Python 3.11+**.
 
+Clone the repository:
+
 ```bash
 git clone https://github.com/alicemukarwema/climate_risk_planting_decision_model
-cd climate_risk_planting_model
+cd climate_risk_planting_decision_model
+```
 
+Create and activate a virtual environment.
+
+**Windows:**
+
+```bat
 python -m venv .venv
-.venv\Scripts\activate              # Windows   (Linux/Mac: source .venv/bin/activate)
-pip install -r requirements.txt      # API + model runtime dependencies
+.venv\Scripts\activate
+```
 
-# 1. train: features → simulation → labels → 4-model comparison → artefacts
+**Mac/Linux:**
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+Install dependencies, train, test, and run the API:
+
+```bash
+pip install -r requirements.txt
+
 python train.py
-
-# 2. Test the deployed API behaviour
 python tests/test_api.py
-
-# 3. Serve the API locally
 uvicorn app:app --reload --port 8000
 ```
 
@@ -199,6 +213,12 @@ redeploy.
 
 **Monitor** via `data/prediction_logs.csv` and the `/health` endpoint.
 
+## 6 · Video Demo
+
+The 5-10 minute demo should focus on the MVP functionality: the notebook/model
+pipeline, Swagger UI, `/health`, `/predict`, sample output fields, and honest
+limitations. A recording plan is provided in [`VIDEO_SCRIPT.md`](VIDEO_SCRIPT.md).
+
 
 
 ## 7 · Limitations 
@@ -213,5 +233,3 @@ redeploy.
 - Tmin ends 2016 and Tmax 2021; later seasons fall back to climatology for
   the temperature component.
 - Outputs are decision support, not guaranteed outcomes (ethics, proposal §3.12).
-
-
