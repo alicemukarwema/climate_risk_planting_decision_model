@@ -136,7 +136,7 @@ Then open:
 
 ## Deployment Links
 
-- Streamlit demo: **TO BE ADDED**
+- Streamlit demo: https://climateriskplantingdecisionmodel-mqfkjhaejf5e9fk5q8slgt.streamlit.app/
 - FastAPI demo: **TO BE ADDED IF DEPLOYED**
 
 ## Setup
