@@ -7,8 +7,7 @@ trained machine-learning model.
 
 > **GitHub repo:** https://github.com/alicemukarwema/climate_risk_planting_decision_model  
 > **Deployed Streamlit app:** https://climateriskplantingdecisionmodel-mqfkjhaejf5e9fk5q8slgt.streamlit.app/  
-> **5-minute demo video:** https://drive.google.com/file/d/1trDtNwObJ4aEENOfXE2WRl2Xh8jfeOKN/view?usp=sharing
-
+> **5-minute demo video:** (https://drive.google.com/file/d/1JJBR1lEyFYj6hMOVVkiAy2oUl2GjuDTX/view?usp=sharing)
 ## Product Scope
 
 The app answers one focused question:
