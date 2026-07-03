@@ -19,6 +19,12 @@ from service import AdvisoryService
 
 SELECTED_MODEL_KEY = "xgb_full"
 SELECTED_MODEL_NAME = "Climate Risk-Aware Planting Window Classifier"
+CLIMATE_INPUT_BOUNDS = {
+    "cum_rain_since_sep1": (0.0, 800.0),
+    "last_dekad_rain": (0.0, 300.0),
+    "last3_rain": (0.0, 500.0),
+    "pre_tmax_anom": (-3.0, 3.0),
+}
 
 
 st.set_page_config(
@@ -98,7 +104,7 @@ def show_prediction(result: dict) -> None:
 def main() -> None:
     st.title("Climate Risk-Aware Planting Window Classifier")
     st.write(
-        "This demo classifies maize and bean planting windows in Nyagatare "
+        "This classifies maize and bean planting windows in Nyagatare "
         "District as suitable, risky, or delay using Meteo Rwanda/ENACTS "
         "dekadal climate data and a trained machine-learning model."
     )
@@ -108,6 +114,7 @@ def main() -> None:
         st.error("Model artifacts are missing. Run `python train.py` first.")
 
     if artefacts_present:
+        service = load_service()
         with st.form("prediction_form"):
             crop = st.selectbox("Crop", ["maize", "beans"])
             window = st.selectbox(
@@ -116,12 +123,56 @@ def main() -> None:
                 format_func=lambda value: DEKAD_LABEL[value],
             )
             st.text_input("Location", value="Nyagatare District", disabled=True)
+            use_observed = st.checkbox("Use observed climate values", value=False)
+
+            overrides = None
+            if use_observed:
+                defaults = service.defaults[window]
+                cum_rain = st.number_input(
+                    "Rain observed since 1 Sep (mm)",
+                    min_value=CLIMATE_INPUT_BOUNDS["cum_rain_since_sep1"][0],
+                    max_value=CLIMATE_INPUT_BOUNDS["cum_rain_since_sep1"][1],
+                    value=float(defaults["cum_rain_since_sep1"]),
+                    step=1.0,
+                )
+                last_dekad_rain = st.number_input(
+                    "Rain in last dekad (mm)",
+                    min_value=CLIMATE_INPUT_BOUNDS["last_dekad_rain"][0],
+                    max_value=CLIMATE_INPUT_BOUNDS["last_dekad_rain"][1],
+                    value=float(defaults["last_dekad_rain"]),
+                    step=1.0,
+                )
+                last3_rain = st.number_input(
+                    "Rain in last 3 dekads (mm)",
+                    min_value=CLIMATE_INPUT_BOUNDS["last3_rain"][0],
+                    max_value=CLIMATE_INPUT_BOUNDS["last3_rain"][1],
+                    value=float(defaults["last3_rain"]),
+                    step=1.0,
+                )
+                onset_reached = st.checkbox(
+                    "Rainfall onset reached",
+                    value=bool(defaults["cum_rain_since_sep1"] >= 25),
+                )
+                pre_tmax_anom = st.slider(
+                    "May-Aug max-temperature anomaly (deg C)",
+                    min_value=CLIMATE_INPUT_BOUNDS["pre_tmax_anom"][0],
+                    max_value=CLIMATE_INPUT_BOUNDS["pre_tmax_anom"][1],
+                    value=0.0,
+                    step=0.1,
+                )
+                overrides = {
+                    "cum_rain_since_sep1": cum_rain,
+                    "last_dekad_rain": last_dekad_rain,
+                    "last3_rain": last3_rain,
+                    "onset_reached": int(onset_reached),
+                    "pre_tmax_anom": pre_tmax_anom,
+                }
+
             submitted = st.form_submit_button("Predict Risk")
 
         if submitted:
             with st.spinner("Classifying planting-window risk..."):
-                service = load_service()
-                result = service.predict_option(crop, window)
+                result = service.predict_option(crop, window, overrides)
             show_prediction(result)
 
     show_metrics(load_metrics())

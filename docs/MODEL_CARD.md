@@ -75,7 +75,7 @@ The selected XGBoost model achieved:
 |---|---:|
 | Macro F1 | 0.642 |
 | Balanced accuracy | 0.706 |
-| Brier score | 0.556 |
+| Brier score | 0.281 |
 
 Per-class recall on the test set:
 

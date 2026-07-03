@@ -1,5 +1,5 @@
 """
-Advisory service: glue between the trained artefacts and the API.
+Advisory service: glue between the trained artefacts and the Streamlit demo.
 
 At startup it fits the weather generator on the full historical record,
 loads the selected XGBoost model, and precomputes climatological defaults

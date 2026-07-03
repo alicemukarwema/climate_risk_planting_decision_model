@@ -28,7 +28,7 @@ def _abs(year: int, dekad_of_year: int) -> int:
 
 
 def yearly_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Season-level indicators per year (EDA + API 'latest state')."""
+    """Season-level indicators per year for EDA and model features."""
     rows = []
     for year in sorted(df.year.unique()):
         sond = df[(df.year == year) & df.dekad_of_year.between(*SOND)]

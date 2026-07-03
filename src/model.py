@@ -78,7 +78,7 @@ def evaluate(y_true: np.ndarray, y_pred: np.ndarray,
         "balanced_accuracy": round(float(
             balanced_accuracy_score(y_true, y_pred)), 3),
         "brier_score": round(float(
-            np.mean(np.sum((y_proba - onehot) ** 2, axis=1))), 3),
+            np.mean(np.sum((y_proba - onehot) ** 2, axis=1) / 2)), 3),
         "per_class": {l: {"precision": round(float(p), 3),
                           "recall": round(float(r), 3),
                           "f1": round(float(f), 3),
