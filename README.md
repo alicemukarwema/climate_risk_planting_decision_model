@@ -146,19 +146,6 @@ Run the Streamlit/service smoke tests:
 .venv/bin/python tests/test_streamlit_service.py
 ```
 
-Latest local result:
-
-```text
-model artefacts are present                             PASS
-metrics report includes model comparison and selected model PASS
-metrics report includes per-class recall                PASS
-valid form values return a recommendation               PASS
-supported crops and windows are constrained             PASS
-season scan ranks all crop-window combinations          PASS
-streamlit_app imports, loads metrics, and constrains climate inputs PASS
-7/7 passed
-```
-
 Run the scenario and performance checks:
 
 ```bash
@@ -206,13 +193,6 @@ Validation screenshots:
 
 <img src="docs/screenshots/07_model_metrics.png" alt="Clean model metrics view" width="760">
 
-Demo checklist:
-
-- Streamlit app open on the deployed link
-- Prediction result for maize in `1-10 Sep`
-- Prediction result after changing crop/window/climate values
-- Model metrics section in the Streamlit app
-- Terminal output from the two test scripts above
 
 ## Deployment Plan And Execution
 
@@ -234,8 +214,7 @@ The submitted deployment link is:
 https://climateriskplantingdecisionmodel-mqfkjhaejf5e9fk5q8slgt.streamlit.app/
 ```
 
-No separate API server, Docker deployment, or Render service is required for
-the submitted version. The app is connected to Streamlit through
+ The app is connected to Streamlit through
 `streamlit_app.py`.
 
 Inside `streamlit_app.py`, the app loads the trained model through
@@ -245,7 +224,7 @@ and returns predictions to the Streamlit form.
 
 ## Analysis
 
-The project achieved the main proposal objective: a working climate-risk-aware
+The project achieved a working climate-risk-aware
 planting-window classifier for maize and beans in Nyagatare. The selected
 XGBoost model improved over the rule-based baseline, especially on balanced
 accuracy and Brier score, showing that combining raw climate features with
@@ -269,9 +248,7 @@ demonstrable product rather than only a notebook result.
 
 The impact is practical: supervisors, students, and extension stakeholders can
 try different planting windows and immediately see the risk class, confidence,
-and climate-risk explanation. The app also makes model limitations visible,
-which is important for responsible use.
-
+and climate-risk explanation.
 ## Recommendations And Future Work
 
 - Validate crop thresholds and labels with RAB, Meteo Rwanda, agronomists, and
