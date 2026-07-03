@@ -179,15 +179,33 @@ Additional checks covered:
 
 Validation screenshots:
 
-| screenshot | file |
-|---|---|
-| Streamlit service smoke test | `docs/screenshots/01_tests_streamlit_service.png` |
-| Scenario and performance checks | `docs/screenshots/02_tests_scenarios_performance.png` |
-| Streamlit overview and model metrics | `docs/screenshots/03_streamlit_overview_metrics.png` |
-| Beans prediction with observed climate values | `docs/screenshots/04_beans_observed_prediction.png` |
-| Maize risky prediction with observed climate values | `docs/screenshots/05_maize_risky_prediction.png` |
-| Prediction explanation and risk components | `docs/screenshots/06_prediction_explanation_metrics.png` |
-| Clean model metrics view | `docs/screenshots/07_model_metrics.png` |
+**Streamlit service smoke test**
+
+<img src="docs/screenshots/01_tests_streamlit_service.png" alt="Streamlit service smoke test" width="760">
+
+**Scenario and performance checks**
+
+<img src="docs/screenshots/02_tests_scenarios_performance.png" alt="Scenario and performance checks" width="760">
+
+**Streamlit overview and model metrics**
+
+<img src="docs/screenshots/03_streamlit_overview_metrics.png" alt="Streamlit overview and model metrics" width="760">
+
+**Beans prediction with observed climate values**
+
+<img src="docs/screenshots/04_beans_observed_prediction.png" alt="Beans prediction with observed climate values" width="760">
+
+**Maize risky prediction with observed climate values**
+
+<img src="docs/screenshots/05_maize_risky_prediction.png" alt="Maize risky prediction with observed climate values" width="760">
+
+**Prediction explanation and risk components**
+
+<img src="docs/screenshots/06_prediction_explanation_metrics.png" alt="Prediction explanation and risk components" width="760">
+
+**Clean model metrics view**
+
+<img src="docs/screenshots/07_model_metrics.png" alt="Clean model metrics view" width="760">
 
 Demo checklist:
 
