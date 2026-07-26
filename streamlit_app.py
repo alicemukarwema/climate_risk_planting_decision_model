@@ -26,7 +26,6 @@ CLIMATE_INPUT_BOUNDS = {
     "pre_tmax_anom": (-3.0, 3.0),
 }
 
-
 st.set_page_config(
     page_title="Climate Risk-Aware Planting Window Classifier",
     layout="centered",
