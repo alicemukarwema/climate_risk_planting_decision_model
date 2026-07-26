@@ -30,8 +30,10 @@ CLIMATE_INPUT_BOUNDS = {
 st.set_page_config(
     page_title="Climate Risk-Aware Planting Window Classifier",
     layout="centered",
+    initial_sidebar_state="expanded",
 )
 
+st.page_link("pages/2_Terms_and_Privacy.py", label="📄 Terms of Use & Privacy Policy")
 
 @st.cache_resource(show_spinner=False)
 def load_service() -> AdvisoryService:
