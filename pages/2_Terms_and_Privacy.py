@@ -35,7 +35,7 @@ st.markdown("""
   ratings of output clarity — no names, phone numbers or personal comments are stored.
 - **Legal basis, rights and contact:** Processing aligns with Rwanda Law No. 058/2021.
   Participants may withdraw and request deletion of their feedback at any time.
-  Contact: **[your ALU email]**.
+  Contact: **mukarwemaalice@gmail.com**.
 """)
 
 st.info("This tool is decision support, not a guarantee of rainfall or harvest. "
